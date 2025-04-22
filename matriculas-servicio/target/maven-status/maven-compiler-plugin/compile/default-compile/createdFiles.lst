@@ -1,0 +1,5 @@
+com\alvaro\sistema\matriculasservicio\model\User.class
+com\alvaro\sistema\matriculasservicio\MatriculasServicioApplication.class
+com\alvaro\sistema\matriculasservicio\client\UserClient.class
+com\alvaro\sistema\matriculasservicio\model\Asignatura.class
+com\alvaro\sistema\matriculasservicio\client\AsignaturaClient.class

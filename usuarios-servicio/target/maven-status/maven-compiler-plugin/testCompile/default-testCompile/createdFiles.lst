@@ -1,0 +1,3 @@
+com\alvaro\sistema\usuariosservicio\controller\UserControllerTest.class
+com\alvaro\sistema\usuariosservicio\repository\UserRepositoryTest.class
+com\alvaro\sistema\usuariosservicio\service\UserServiceImplTest.class

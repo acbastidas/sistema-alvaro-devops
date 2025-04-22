@@ -1,0 +1,26 @@
+# Ignorar directorios de Git
+.git
+
+# Ignorar directorios de target/ Maven
+target/
+*/target/
+
+# Ignorar archivos y directorios de IDEs comunes
+.mvn # Si no usas el wrapper Maven de .mvn/
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Ignorar archivos de configuración específicos del sistema o IDE
+.DS_Store
+
+# Ignorar archivos de Eclipse
+.classpath
+.project
+.settings/
+
+# Ignorar los propios archivos de Docker para evitar bucles o errores
+docker-compose.yml
+Dockerfile
