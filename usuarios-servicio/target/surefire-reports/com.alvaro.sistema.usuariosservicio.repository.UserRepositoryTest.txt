@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.alvaro.sistema.usuariosservicio.repository.UserRepositoryTest
--------------------------------------------------------------------------------
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.852 s -- in com.alvaro.sistema.usuariosservicio.repository.UserRepositoryTest

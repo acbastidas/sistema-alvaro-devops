@@ -1,6 +1,0 @@
-com\alvaro\sistema\usuariosservicio\repository\UserRepository.class
-com\alvaro\sistema\usuariosservicio\model\User.class
-com\alvaro\sistema\usuariosservicio\UsuariosServicioApplication.class
-com\alvaro\sistema\usuariosservicio\controller\UserController.class
-com\alvaro\sistema\usuariosservicio\service\UserService.class
-com\alvaro\sistema\usuariosservicio\service\UserServiceImpl.class
