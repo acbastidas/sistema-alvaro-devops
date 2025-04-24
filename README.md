@@ -38,9 +38,6 @@ La arquitectura general del sistema sigue un patrón de microservicios con compo
 4.  **Inter-service Communication**: Los microservicios se comunican entre sí (ej: `matriculas-servicio` llama a `usuarios-servicio` y `asignaturas-servicio`) utilizando Feign Clients y el descubrimiento de servicios de Eureka.
 5.  **Database per Service**: Cada microservicio de negocio tiene su propia base de datos MongoDB dedicada.
 
-![Diagrama de Arquitectura (Ejemplo simple)](link-aqui-si-tienes-un-diagrama.png)
-_(Reemplaza 'link-aqui-si-tienes-un-diagrama.png' por el enlace a un diagrama si lo creas)_
-
 ### 5. Tecnologías Utilizadas
 
 - **Lenguaje y Framework**: Java con Spring Boot.
