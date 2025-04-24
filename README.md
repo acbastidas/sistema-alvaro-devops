@@ -1,142 +1,151 @@
 # sistema-alvaro-devops
-creación de devops
 
-# Sistema alvaro - DevOps
+## Sistema alvaro - DevOps
 
-## 1. Descripción General
+### 1. Descripción General
 
 Este repositorio contiene el código fuente y la configuración DevOps para el **Sistema alvaro devops**.
 
-Este sistema gestiona el proceso de matrícula académica, permitiendo a los estudiantes inscribirse en asignaturas, a los administradores gestionar usuarios y asignaturas disponibles.]
+Este sistema gestiona el proceso de matrícula académica, permitiendo a los estudiantes inscribirse en asignaturas, y a los administradores gestionar usuarios y asignaturas disponibles.
 
 El sistema está diseñado siguiendo una arquitectura de microservicios para facilitar la escalabilidad, mantenibilidad y despliegue independiente de sus componentes.
 
-## 2. Microservicios
+### 2. Microservicios de Negocio
 
-El sistema se compone de los siguientes microservicios principales:
+El sistema se compone de los siguientes microservicios principales (ubicados en la carpeta raíz del proyecto):
 
-* **`/usuarios-servicio`**: Responsable de la gestión de usuarios (estudiantes, profesores, administradores), autenticación y autorización.
-* **`/asignaturas-servicio`**: Gestiona la información relacionada con las asignaturas o cursos ofrecidos (creación, consulta, actualización, eliminación de asignaturas, pensum, etc.).
-* **`/matriculas-servicio`**: Maneja el proceso de matriculación o inscripción de estudiantes en las asignaturas, validaciones de cupos, pre-requisitos, etc. Interactúa con los servicios de usuarios y asignaturas.
+- **`/usuarios-servicio`**: Responsable de la gestión de usuarios (estudiantes, profesores, administradores). Implementa operaciones CRUD y es la base para la autenticación y autorización (a ser implementadas).
+- **`/asignaturas-servicio`**: Gestiona la información relacionada con las asignaturas o cursos ofrecidos (creación, consulta, actualización, eliminación de asignaturas, pensum, etc.).
+- **`/matriculas-servicio`**: Maneja el proceso de matriculación o inscripción de estudiantes en las asignaturas. Interactúa con los servicios de usuarios y asignaturas utilizando comunicación inter-servicio.
+- **`/gateway-servicio`** (Estructura base): Servirá como el punto de entrada único (API Gateway) para todas las solicitudes externas, enrutando las peticiones a los microservicios correspondientes.
 
-## 3. Componentes de Infraestructura
+### 3. Componentes de Infraestructura
 
-Además de los microservicios de negocio, se utilizan los siguientes componentes de infraestructura para soportar la arquitectura:
+Además de los microservicios de negocio, se utilizan los siguientes componentes de infraestructura, también gestionados dentro de este repositorio o configurados externamente:
 
-* **`/eureka-server`**: Actúa como servidor de descubrimiento de servicios (Service Discovery). Permite que los microservicios se registren y se encuentren dinámicamente entre sí.
-* **`/config-server`**: Proporciona un servidor centralizado para gestionar la configuración externa de todos los microservicios.
-* **`/gateway-servicio`**: Actúa como un punto de entrada único (API Gateway) para todas las solicitudes externas. Enruta las peticiones al microservicio correspondiente, puede manejar autenticación, logging centralizado, limitación de tasa (rate limiting), etc.
+- **`/eureka-server`**: Servidor de descubrimiento de servicios (Service Discovery) centralizado. Los microservicios se registran en él y lo consultan para encontrarse dinámicamente.
+- **`/config-server`**: Servidor centralizado para gestionar la configuración externa de todos los microservicios, obteniendo las propiedades desde un repositorio Git externo.
+- **Bases de Datos MongoDB**: Se utiliza una instancia separada de MongoDB para cada microservicio de negocio (`usuarios_db`, `asignaturas_db`, `matriculas_db`) para mantener el acoplamiento bajo a nivel de datos.
+- **Repositorio de Configuración Externa**: Un repositorio separado en GitHub (`https://github.com/acbastidas/microservices-config.git`) almacena los archivos de configuración (`.properties`) para cada microservicio, que son leídos por el `config-server`.
 
-## 4. Arquitectura
+### 4. Arquitectura
 
-La arquitectura general del sistema sigue un patrón de microservicios.
+La arquitectura general del sistema sigue un patrón de microservicios con componentes de soporte:
 
-1.  Las solicitudes de los clientes (navegador web, aplicación móvil) llegan al **API Gateway** (`/gateway-servicio`).
-2.  El Gateway puede realizar tareas iniciales como autenticación (posiblemente interactuando con `/usuarios-servicio`) y luego enruta la solicitud al microservicio apropiado.
-3.  Los microservicios (`/usuarios-servicio`, `/asignaturas-servicio`, `/matriculas-servicio`) se comunican entre sí según sea necesario, típicamente mediante APIs REST o mensajería asíncrona.
-4.  Si se usan **Eureka** y **Config Server**:
-    * Cada microservicio se registra en **Eureka Server** (`/eureka-server`) al iniciar.
-    * Los microservicios consultan a Eureka para encontrar las direcciones de otros servicios con los que necesitan comunicarse.
-    * Al iniciar, los microservicios obtienen su configuración del **Config Server** (`/config-server`).
+1.  **Service Discovery (Eureka)**: Los microservicios se registran en el `eureka-server` al iniciar. Otros servicios consultan a Eureka para encontrar las instancias activas de los servicios que necesitan.
+2.  **Centralized Configuration (Config Server)**: Al iniciar, los microservicios cliente (`usuarios-servicio`, `asignaturas-servicio`, `matriculas-servicio`, `gateway-servicio`) se conectan al `config-server` (que encuentran vía Eureka) para obtener su configuración específica desde el repositorio Git externo.
+3.  **API Gateway**: Las solicitudes externas entrarán por el `gateway-servicio` y serán enrutadas al microservicio de negocio adecuado.
+4.  **Inter-service Communication**: Los microservicios se comunican entre sí (ej: `matriculas-servicio` llama a `usuarios-servicio` y `asignaturas-servicio`) utilizando Feign Clients y el descubrimiento de servicios de Eureka.
+5.  **Database per Service**: Cada microservicio de negocio tiene su propia base de datos MongoDB dedicada.
 
-## 5. Tecnologías (Ejemplo)
+![Diagrama de Arquitectura (Ejemplo simple)](link-aqui-si-tienes-un-diagrama.png)
+_(Reemplaza 'link-aqui-si-tienes-un-diagrama.png' por el enlace a un diagrama si lo creas)_
 
-* **Lenguaje/Framework Principal:** [Java con Spring Boot / Node.js con Express / Python con Flask/Django, etc.]
-* **Bases de Datos:** [PostgreSQL / MongoDB / MySQL por servicio, etc.]
-* **Contenerización:** [Docker]
-* **Orquestación:** [Kubernetes / Docker Swarm] (Si aplica)
-* **Mensajería:** [RabbitMQ / Kafka] (Si aplica para comunicación asíncrona)
-* **CI/CD:** [GitHub Actions / Jenkins / GitLab CI, etc.]
+### 5. Tecnologías Utilizadas
 
-## 6. Estructura del Repositorio
+- **Lenguaje y Framework**: Java con Spring Boot.
+- **Spring Cloud Components**: Eureka (Service Discovery), Config Server, OpenFeign (Comunicación Inter-servicio).
+- **Base de Datos**: MongoDB con Spring Data MongoDB.
+- **Contenerización**: Docker.
+- **Orquestación Local**: Docker Compose (para desarrollo y pruebas locales).
+- **Herramienta de Construcción**: Apache Maven.
+- **Pruebas Automatizadas**: JUnit 5, Mockito, Spring Boot Test (`@WebMvcTest`, `@DataMongoTest`).
+- **Gestión de Configuración Externa**: Git y Spring Cloud Config Server.
 
-Okay, aquí tienes una guía detallada para la planificación y organización de tu repositorio en GitHub, siguiendo tus especificaciones.
+### 6. Estructura del Repositorio
 
-1. Crear el Repositorio en GitHub
+```bash
+.
+├── asignaturas-servicio/     # Código fuente del microservicio de asignaturas
+├── config-server/            # Código fuente del servidor de configuración
+├── eureka-server/            # Código fuente del servidor de descubrimiento
+├── gateway-servicio/         # Código fuente del API Gateway
+├── matriculas-servicio/      # Código fuente del microservicio de matrículas
+├── usuarios-servicio/        # Código fuente del microservicio de usuarios
+├── docker-compose.yml        # Archivo para orquestar servicios con Docker Compose (a definir)
+├── pom.xml                   # Archivo POM padre de Maven para el proyecto multi-módulo
+├── .gitignore                # Archivos y carpetas ignorados por Git
+└── README.md                 # Este archivo
+(Nota: El repositorio de configuración externa microservices-config es independiente y no se incluye en esta estructura de carpetas principal).
 
-Ve a GitHub.
-Haz clic en el botón "+" en la esquina superior derecha y selecciona "New repository".
-Nombre del Repositorio: sistema-[nombre]-devops. Reemplaza [nombre] con el nombre específico de tu sistema (por ejemplo, sistema-academico-devops, sistema-inscripciones-devops). Asegúrate de que sea descriptivo.
-Descripción (Opcional): Puedes añadir una breve descripción aquí, como "Repositorio para el desarrollo DevOps del Sistema [Nombre]".
-Elige si será público o privado.
-Importante: Marca la casilla "Add a README file". Esto creará el archivo README.md inicial por ti.
-Puedes añadir un .gitignore (seleccionando una plantilla como Java, Node, Python, según tu tecnología principal) y una licencia si lo deseas.
-Haz clic en "Create repository".
-2. Contenido del README.md
+7. Configuración Externa
+Las configuraciones específicas para cada microservicio y entorno se gestionan de forma centralizada en el siguiente repositorio de GitHub, que es leído por el config-server:
 
-Una vez creado el repositorio, clónalo a tu máquina local:
+https://github.com/acbastidas/microservices-config.git
 
-Bash
+Cada archivo .properties en este repositorio corresponde a un microservicio (ej: usuarios-servicio.properties, application.properties para configuración compartida).
 
-git clone https://github.com/tu-usuario/sistema-[nombre]-devops.git
-cd sistema-[nombre]-devops
-Ahora, edita el archivo README.md. Aquí tienes una plantilla sugerida basada en tus requisitos. Reemplaza el contenido entre corchetes [...] con la información específica de tu sistema.
+8. Cómo Empezar (Ejecución Local)
+Pre-requisitos
+Asegúrate de tener instalado lo siguiente:
 
-Markdown
+Java Development Kit (JDK) [Especifica la versión que usaste, ej: JDK 17]
+Apache Maven [Especifica la versión que usaste]
+Docker Desktop (incluye Docker Engine y Docker Compose)
+Git
+Levantar el Entorno Local con Docker Compose
+(Este paso asume que ya tienes un archivo docker-compose.yml completo que defina todos los servicios: MongoDBs, Eureka, Config Server, Microservicios y Gateway).
 
-# Sistema [Nombre del Sistema] - DevOps
+Clona el repositorio principal: git clone https://github.com/acbastidas/sistema-alvaro-devops.git (Asegúrate de usar la URL correcta de tu repositorio principal)
+Navega a la carpeta del proyecto: cd sistema-alvaro-devops
+(Opcional si aún no lo tienes) Clona o actualiza tu repositorio de configuración externa. Asegúrate de que el config-server esté apuntando a este repositorio clonado o al remoto en GitHub. git clone https://github.com/acbastidas/microservices-config.git ../microservices-config (La ubicación puede variar, asegúrate que coincida con la config del config-server)
+Construye las imágenes Docker de tus microservicios (esto compilará el código y creará las imágenes): mvn clean package -DskipTests docker-compose build (Nota: -DskipTests salta las pruebas durante el package, si quieres ejecutarlas, omite este flag)
+Levanta todos los servicios definidos en docker-compose.yml. Importante: El orden en el archivo docker-compose.yml o la configuración de dependencias (depends_on) es crucial (MongoDBs -> Eureka -> Config Server -> Microservicios -> Gateway). docker-compose up -d (-d para ejecutar en segundo plano)
+Verifica que los contenedores se hayan levantado correctamente con docker-compose ps.
+Puedes verificar el registro de servicios en el Dashboard de Eureka (generalmente en http://localhost:8761).
+Ejecutar Microservicios Individualmente (Sin Docker Compose)
+Útil para desarrollo y depuración de un solo servicio.
 
-## 1. Descripción General
+Asegúrate de que Eureka Server y Config Server estén corriendo (puedes levantarlos con Docker Compose o ejecutarlos individualmente con mvn spring-boot:run). Si corres las BDs fuera de Docker Compose, asegúrate también de que estén activas.
+Navega a la carpeta del microservicio que deseas ejecutar: cd sistema-alvaro-devops/usuarios-servicio (o el módulo correspondiente)
+Ejecuta el microservicio. Si usas el perfil local (para conectar a Mongo en localhost en lugar del nombre del servicio de Docker Compose), actívalo: mvn spring-boot:run -Dspring-boot.run.profiles=local (Asegúrate de que tu application-local.properties o @TestPropertySource use localhost para la BD si la corres localmente fuera de Docker Compose).
+Repite para otros microservicios según sea necesario.
+Probar Endpoints
+Utiliza una herramienta como Postman para enviar peticiones a los endpoints de tus microservicios.
+Las URLs base dependerán de si estás usando el Gateway o accediendo a los servicios directamente, y si corren localmente o en Docker Compose.
+Si usas Gateway (asumiendo puerto 8080): http://localhost:8080/[nombre-servicio]/[ruta] (ej: http://localhost:8080/usuarios/users)
+Si accedes directo al microservicio local (sin Gateway): http://localhost:[puerto-servicio]/[ruta] (ej: http://localhost:8081/users para usuarios)
+Ejecutar Pruebas Automatizadas
+Para ejecutar las pruebas de un módulo específico (ej: usuarios-servicio): cd sistema-alvaro-devops/usuarios-servicio mvn clean test -e (El flag -e muestra mas detalles si hay errores)
+Para ejecutar las pruebas de todos los módulos desde la raíz: cd sistema-alvaro-devops mvn clean test -e
 
-Este repositorio contiene el código fuente y la configuración DevOps para el **Sistema [Nombre del Sistema]**.
+9. Pruebas Automatizadas y CI/CD
+El sistema incluye pruebas unitarias y de integración automatizadas para los microservicios, con cobertura en capas de controlador, servicio y repositorio. Las pruebas utilizan:
 
-[Aquí describe brevemente el propósito principal del sistema. Por ejemplo: Este sistema gestiona el proceso de matrícula académica, permitiendo a los estudiantes inscribirse en asignaturas, a los administradores gestionar usuarios y asignaturas disponibles.]
+JUnit 5 y Mockito para pruebas unitarias.
 
-El sistema está diseñado siguiendo una arquitectura de microservicios para facilitar la escalabilidad, mantenibilidad y despliegue independiente de sus componentes.
+Spring Boot Test con anotaciones como @WebMvcTest y @DataMongoTest para pruebas de integración.
 
-## 2. Microservicios
+Pruebas ejecutadas con mvn test y validadas tanto localmente como en el pipeline CI.
 
-El sistema se compone de los siguientes microservicios principales:
+Pruebas realizadas (abril 2025)
+Se completaron las pruebas en los siguientes módulos:
 
-* **`/usuarios-servicio`**: Responsable de la gestión de usuarios (estudiantes, profesores, administradores), autenticación y autorización.
-* **`/asignaturas-servicio`**: Gestiona la información relacionada con las asignaturas o cursos ofrecidos (creación, consulta, actualización, eliminación de asignaturas, pensum, etc.).
-* **`/matriculas-servicio`**: Maneja el proceso de matriculación o inscripción de estudiantes en las asignaturas, validaciones de cupos, pre-requisitos, etc. Interactúa con los servicios de usuarios y asignaturas.
+✅ usuarios-servicio: Controlador, Servicio y Repositorio cubiertos con tests automatizados.
 
-## 3. Componentes de Infraestructura
+✅ Pruebas de integración usando @WebMvcTest y simulación de requests HTTP.
 
-Además de los microservicios de negocio, se utilizan los siguientes componentes de infraestructura para soportar la arquitectura:
+✅ Conectividad entre servicios verificada vía Postman (matriculas-servicio consume usuarios-servicio y asignaturas-servicio correctamente).
 
-* **`/eureka-server` (Opcional, si aplica)**: Actúa como servidor de descubrimiento de servicios (Service Discovery). Permite que los microservicios se registren y se encuentren dinámicamente entre sí. [Menciona si lo estás usando o planeas usarlo].
-* **`/config-server` (Opcional, si aplica)**: Proporciona un servidor centralizado para gestionar la configuración externa de todos los microservicios. [Menciona si lo estás usando o planeas usarlo].
-* **`/gateway-servicio` (Opcional)**: Actúa como un punto de entrada único (API Gateway) para todas las solicitudes externas. Enruta las peticiones al microservicio correspondiente, puede manejar autenticación, logging centralizado, limitación de tasa (rate limiting), etc. [Menciona si lo estás usando o planeas usarlo].
+✅ Se valida que las matrículas se creen correctamente ingresando IDs válidos de usuario y asignatura.
 
-## 4. Arquitectura
+Pipeline CI/CD
+Se ha configurado un pipeline básico de integración continua en GitHub Actions (.github/workflows/test.yml) que:
 
-La arquitectura general del sistema sigue un patrón de microservicios.
+Verifica que el proyecto compile correctamente.
 
-[Describe aquí cómo interactúan los componentes. Por ejemplo:]
+Ejecuta los tests unitarios e integración en cada push o pull request a la rama main.
 
-1.  Las solicitudes de los clientes (navegador web, aplicación móvil) llegan al **API Gateway** (`/gateway-servicio`).
-2.  El Gateway puede realizar tareas iniciales como autenticación (posiblemente interactuando con `/usuarios-servicio`) y luego enruta la solicitud al microservicio apropiado.
-3.  Los microservicios (`/usuarios-servicio`, `/asignaturas-servicio`, `/matriculas-servicio`) se comunican entre sí según sea necesario, típicamente mediante APIs REST o mensajería asíncrona.
-4.  Si se usan **Eureka** y **Config Server**:
-    * Cada microservicio se registra en **Eureka Server** (`/eureka-server`) al iniciar.
-    * Los microservicios consultan a Eureka para encontrar las direcciones de otros servicios con los que necesitan comunicarse.
-    * Al iniciar, los microservicios obtienen su configuración del **Config Server** (`/config-server`).
+🎥 También se está generando una grabación de video como evidencia de funcionamiento exitoso del sistema completo con Docker + Postman.
 
-[Opcional: Puedes añadir un diagrama de arquitectura simple aquí o enlazar a uno alojado en otro lugar, como una carpeta `/docs` o una herramienta de diagramación.]
+10. Próximos Pasos
+Implementar seguridad con Spring Security + JWT.
 
-## 5. Tecnologías (Ejemplo)
+Automatizar despliegue con DockerHub + CI/CD completo.
 
-* **Lenguaje/Framework Principal:** [Java con Spring Boot / Node.js con Express / Python con Flask/Django, etc.]
-* **Bases de Datos:** [PostgreSQL / MongoDB / MySQL por servicio, etc.]
-* **Contenerización:** [Docker]
-* **Orquestación:** [Kubernetes / Docker Swarm] (Si aplica)
-* **Mensajería:** [RabbitMQ / Kafka] (Si aplica para comunicación asíncrona)
-* **CI/CD:** [GitHub Actions / Jenkins / GitLab CI, etc.]
+Desplegar en la nube (Azure, AWS o Render).
 
-## 6. Estructura del Repositorio
+Agregar monitoreo centralizado con Prometheus + Grafana.
 
-├── asignaturas-servicio/ # Código del microservicio de asignaturas
-├── config-server/        # Código del servidor de configuración (si aplica)
-├── eureka-server/        # Código del servidor Eureka (si aplica)
-├── gateway-servicio/     # Código del API Gateway (opcional)
-├── matriculas-servicio/  # Código del microservicio de matrículas
-├── usuarios-servicio/    # Código del microservicio de usuarios
-├── .gitignore            # Archivos y carpetas a ignorar por Git
-├── README.md             # Este archivo
-
-## 7. Cómo Empezar (Ejemplo)
-
-1.  Clonar el repositorio: `git clone https://github.com/acbastidas/sistema-alvaro-devops.git`
-2.  Navegar a la carpeta: `cd sistema-alvaro-devops`
+Añadir documentación Swagger/OpenAPI por microservicio.
+```
